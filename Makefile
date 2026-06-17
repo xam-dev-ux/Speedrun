@@ -21,19 +21,21 @@ sync-abi: build
 
 # ── Deploy ─────────────────────────────────────────────────────────────────
 deploy-sepolia:
+	@# PRIVATE_KEY is read inside the script via vm.envUint("PRIVATE_KEY").
+	@# Do NOT pass it as --private-key: that exposes it in `ps aux` and shell history.
+	@test -n "$$PRIVATE_KEY" || (echo "❌  Set PRIVATE_KEY in .env and source it first"; exit 1)
 	cd contracts && forge script script/Deploy.s.sol \
 		--rpc-url $(BASE_SEPOLIA_RPC_URL) \
-		--private-key $(PRIVATE_KEY) \
 		--broadcast \
 		--verify \
 		-vv
 
 deploy-mainnet:
+	@test -n "$$PRIVATE_KEY" || (echo "❌  Set PRIVATE_KEY in .env and source it first"; exit 1)
 	@echo "⚠️  Deploying to BASE MAINNET. Press Ctrl-C to cancel, Enter to continue."
 	@read _
 	cd contracts && forge script script/Deploy.s.sol \
 		--rpc-url $(BASE_MAINNET_RPC_URL) \
-		--private-key $(PRIVATE_KEY) \
 		--broadcast \
 		--verify \
 		-vv

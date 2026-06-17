@@ -97,17 +97,16 @@ export default function RunPage() {
         <section className="border border-gray-800 rounded-xl p-8 mb-8">
           <h2 className="text-xl font-bold mb-2">Deploy your Speedrun contract</h2>
           <p className="text-gray-400 text-sm mb-6">
-            Each runner deploys their own Speedrun.sol. This is the only step that uses the
-            raw private key via Foundry — or you can deploy it here directly via your wallet.
+            Each runner deploys their own Speedrun.sol. Deploy via the Foundry CLI (key stays
+            in env, never as a CLI arg) — or deploy directly from your browser wallet below.
           </p>
 
           {/* CLI option */}
           <div className="bg-gray-900 rounded-lg p-4 font-mono text-xs text-green-400 mb-6 overflow-x-auto">
             <div className="text-gray-500 mb-1"># Option A — Foundry CLI (recommended)</div>
-            forge script contracts/script/Deploy.s.sol \<br />
-            {'  '}--rpc-url $BASE_SEPOLIA_RPC_URL \<br />
-            {'  '}--private-key $PRIVATE_KEY \<br />
-            {'  '}--broadcast --verify
+            <div className="text-gray-500 mb-1"># PRIVATE_KEY is read from env, never passed as --private-key flag</div>
+            export $(grep -v {`'^#'`} .env | xargs)<br />
+            make deploy-sepolia
           </div>
 
           <div className="flex items-center gap-4 mb-6">

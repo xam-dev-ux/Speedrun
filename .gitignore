@@ -6,7 +6,7 @@
 # Foundry
 contracts/out/
 contracts/cache/
-contracts/broadcast/*/
+contracts/broadcast/
 
 # Node / Next.js
 web/node_modules/
@@ -16,4 +16,3 @@ web/.env.local
 # Misc
 .DS_Store
 *.log
-broadcast/speedrun-address.txt

@@ -118,13 +118,21 @@ make deploy-sepolia
 
 # The script prints the contract address and the cast command for initTokens.
 # Example:
+# Source your .env so PRIVATE_KEY is in the environment (not passed as CLI arg)
+export $(grep -v '^#' .env | xargs)
+
+# Deploy — the script reads PRIVATE_KEY via vm.envUint(), never from --private-key flag
+make deploy-sepolia
+
+# Call initTokens() using an encrypted keystore (safest approach):
+# First time only: cast wallet import speedrun --interactive
 cast send <SPEEDRUN_ADDR> \
   "initTokens(bytes32,bytes32,string)" \
   0x6173736574000000000000000000000000000000000000000000000000000000 \
   0x737461626c650000000000000000000000000000000000000000000000000000 \
   "USD" \
   --rpc-url $BASE_SEPOLIA_RPC_URL \
-  --private-key $PRIVATE_KEY
+  --account speedrun
 ```
 
 Salts are arbitrary `bytes32` values. Pick any two different ones.
