@@ -103,7 +103,7 @@ make web-dev
 |---|---|---|
 | `BASE_MAINNET_RPC_URL` | Contracts | RPC for Base mainnet (default: `https://mainnet.base.org`) |
 | `BASE_SEPOLIA_RPC_URL` | Contracts | RPC for Base Sepolia (default: `https://sepolia.base.org`) |
-| `PRIVATE_KEY` | Deploy only | Deployer key for `forge script`. Never used by the web app. |
+| `PRIVATE_KEY` | Not needed | Key is stored in Foundry encrypted keystore (`cast wallet import`), not in env. |
 | `BASESCAN_API_KEY` | Optional | For `--verify` on deploy. Get free at basescan.org. |
 | `NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID` | Frontend | Free at cloud.walletconnect.com |
 | `NEXT_PUBLIC_SPEEDRUN_ADDRESS` | Optional | Pre-fill the Speedrun contract address in the UI |
@@ -112,30 +112,31 @@ make web-dev
 
 ## Deploying to Base Sepolia (after 2026-06-18 18:00 UTC)
 
+The private key **never** appears in any CLI argument, env var, log file, or shell history.
+Foundry's encrypted keystore (`cast wallet import`) is used instead.
+
 ```bash
-# Deploy Speedrun.sol
+# ── One-time setup (run once, key stored AES-256 encrypted) ──
+cast wallet import speedrun --interactive
+# → paste your private key (hidden input, like sudo)
+# → set a keystore password
+# → key stored at ~/.foundry/keystores/speedrun
+
+# ── Deploy ────────────────────────────────────────────────────
 make deploy-sepolia
+# → prompts for keystore password only (key never in CLI args)
+# → prints Speedrun contract address + ready-to-copy cast send command
 
-# The script prints the contract address and the cast command for initTokens.
-# Example:
-# Source your .env so PRIVATE_KEY is in the environment (not passed as CLI arg)
-export $(grep -v '^#' .env | xargs)
-
-# Deploy — the script reads PRIVATE_KEY via vm.envUint(), never from --private-key flag
-make deploy-sepolia
-
-# Call initTokens() using an encrypted keystore (safest approach):
-# First time only: cast wallet import speedrun --interactive
+# ── Call initTokens() ─────────────────────────────────────────
+# Salts are arbitrary bytes32 — pick any two different values.
 cast send <SPEEDRUN_ADDR> \
   "initTokens(bytes32,bytes32,string)" \
-  0x6173736574000000000000000000000000000000000000000000000000000000 \
-  0x737461626c650000000000000000000000000000000000000000000000000000 \
+  $(cast --from-utf8 asset | cast --to-bytes32) \
+  $(cast --from-utf8 stable | cast --to-bytes32) \
   "USD" \
   --rpc-url $BASE_SEPOLIA_RPC_URL \
   --account speedrun
 ```
-
-Salts are arbitrary `bytes32` values. Pick any two different ones.
 
 ---
 

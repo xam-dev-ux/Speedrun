@@ -103,10 +103,11 @@ export default function RunPage() {
 
           {/* CLI option */}
           <div className="bg-gray-900 rounded-lg p-4 font-mono text-xs text-green-400 mb-6 overflow-x-auto">
-            <div className="text-gray-500 mb-1"># Option A — Foundry CLI (recommended)</div>
-            <div className="text-gray-500 mb-1"># PRIVATE_KEY is read from env, never passed as --private-key flag</div>
-            export $(grep -v {`'^#'`} .env | xargs)<br />
-            make deploy-sepolia
+            <div className="text-gray-500 mb-1"># Option A — Foundry CLI (recommended, key never in args or logs)</div>
+            <div className="text-gray-500 mb-1"># One-time setup:</div>
+            <div>cast wallet import speedrun --interactive</div>
+            <div className="text-gray-500 mt-2 mb-1"># Deploy (prompts for keystore password only):</div>
+            <div>make deploy-sepolia</div>
           </div>
 
           <div className="flex items-center gap-4 mb-6">
