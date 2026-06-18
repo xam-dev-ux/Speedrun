@@ -6,6 +6,23 @@ pragma solidity ^0.8.25;
 interface IB20Factory {
     enum B20Variant { ASSET, STABLECOIN }
 
+    // params must be abi.encode(struct) — the factory decodes as a dynamic tuple (0x20 offset prefix).
+    struct B20AssetCreateParams {
+        uint8 version;      // must be 1
+        string name;
+        string symbol;
+        address initialAdmin;
+        uint8 decimals;     // 6–18
+    }
+
+    struct B20StablecoinCreateParams {
+        uint8 version;      // must be 1
+        string name;
+        string symbol;
+        address initialAdmin;
+        string currency;    // A–Z only, immutable
+    }
+
     function createB20(
         B20Variant variant,
         bytes32 salt,
@@ -114,14 +131,14 @@ contract Speedrun {
 
         IB20Factory factory = IB20Factory(B20_FACTORY);
 
-        // Asset: version=1, decimals=12, initialAdmin=deployer
-        bytes memory assetParams = abi.encode(
-            uint8(1),          // version
-            "Speedrun Asset",  // name
-            "SRA",             // symbol
-            deployer,          // initialAdmin
-            uint8(12)          // decimals (6–18)
-        );
+        // Asset: abi.encode(struct) produces the dynamic-tuple encoding the factory expects.
+        bytes memory assetParams = abi.encode(IB20Factory.B20AssetCreateParams({
+            version:      1,
+            name:         "Speedrun Asset",
+            symbol:       "SRA",
+            initialAdmin: deployer,
+            decimals:     12
+        }));
         assetToken = factory.createB20(
             IB20Factory.B20Variant.ASSET,
             saltAsset,
@@ -129,14 +146,14 @@ contract Speedrun {
             new bytes[](0)
         );
 
-        // Stablecoin: version=1, initialAdmin=deployer, currency immutable
-        bytes memory stableParams = abi.encode(
-            uint8(1),           // version
-            "Speedrun Stable",  // name
-            "SRS",              // symbol
-            deployer,           // initialAdmin
-            currencyCode        // currency (immutable after creation)
-        );
+        // Stablecoin: same pattern.
+        bytes memory stableParams = abi.encode(IB20Factory.B20StablecoinCreateParams({
+            version:      1,
+            name:         "Speedrun Stable",
+            symbol:       "SRS",
+            initialAdmin: deployer,
+            currency:     currencyCode
+        }));
         stablecoinToken = factory.createB20(
             IB20Factory.B20Variant.STABLECOIN,
             saltStable,

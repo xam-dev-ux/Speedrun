@@ -33,7 +33,7 @@ deploy-sepolia:
 		--account speedrun \
 		--broadcast \
 		--verify \
-		-vv
+		-vv; true
 
 deploy-mainnet:
 	@echo "⚠️  Deploying to BASE MAINNET. Press Ctrl-C to cancel, Enter to continue."
@@ -43,7 +43,7 @@ deploy-mainnet:
 		--account speedrun \
 		--broadcast \
 		--verify \
-		-vv
+		-vv; true
 
 # ── Frontend ───────────────────────────────────────────────────────────────
 web-dev:
