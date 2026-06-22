@@ -34,7 +34,7 @@ export function StepCard({ step, isDone, isAvailable }: StepCardProps) {
   const { signTypedDataAsync } = useSignTypedData();
   const chainId = useChainId();
 
-  // Wrap every contract write with the builder-code attribution suffix
+  // wagmi spreads all params into viem's writeContract, which natively supports dataSuffix
   const writeContractAsync: typeof _write = (params) =>
     _write({ ...params, dataSuffix: DATA_SUFFIX } as Parameters<typeof _write>[0]);
 
