@@ -98,21 +98,21 @@ export function useSpeedrunProgress(contractAddress: `0x${string}` | undefined) 
     address: contractAddress,
     abi: SPEEDRUN_ABI,
     functionName: 'initialized',
-    query: { enabled: !!contractAddress, refetchInterval: 3_000 },
+    query: { enabled: !!contractAddress, refetchInterval: 3_000, refetchIntervalInBackground: true },
   });
 
   const { data: assetToken } = useReadContract({
     address: contractAddress,
     abi: SPEEDRUN_ABI,
     functionName: 'assetToken',
-    query: { enabled: !!contractAddress && !!initialized },
+    query: { enabled: !!contractAddress, refetchInterval: 3_000, refetchIntervalInBackground: true },
   });
 
   const { data: stablecoinToken } = useReadContract({
     address: contractAddress,
     abi: SPEEDRUN_ABI,
     functionName: 'stablecoinToken',
-    query: { enabled: !!contractAddress && !!initialized },
+    query: { enabled: !!contractAddress, refetchInterval: 3_000, refetchIntervalInBackground: true },
   });
 
   const { data: completedAt } = useReadContract({
