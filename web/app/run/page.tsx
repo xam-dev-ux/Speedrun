@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useAccount, useWriteContract, useWaitForTransactionReceipt, useDeployContract } from 'wagmi';
+import { useAccount, useWriteContract, useWaitForTransactionReceipt, useDeployContract, useChainId } from 'wagmi';
 import { useQueryClient } from '@tanstack/react-query';
 import { ConnectButton } from '@rainbow-me/rainbowkit';
 import { ActivationBanner } from '@/components/ActivationBanner';
@@ -12,8 +12,14 @@ import { SpeedrunContext } from '@/lib/speedrunContext';
 import { DATA_SUFFIX } from '@/lib/wagmi';
 import Link from 'next/link';
 
+function basescan(chainId: number, type: 'address' | 'tx', value: string) {
+  const base = chainId === 8453 ? 'https://basescan.org' : 'https://sepolia.basescan.org';
+  return `${base}/${type}/${value}`;
+}
+
 export default function RunPage() {
   const { isConnected, address } = useAccount();
+  const chainId = useChainId();
   const activation = useActivationStatus();
   const [contractAddr, setContractAddr] = useSpeedrunContractAddress();
   const [manualAddr, setManualAddr] = useState('');
@@ -169,7 +175,7 @@ export default function RunPage() {
               <div className="flex items-center justify-between flex-wrap gap-4">
                 <div>
                   <div className="text-xs text-gray-500 font-mono mb-1">Speedrun contract</div>
-                  <a href={`https://sepolia.basescan.org/address/${contractAddr}`} target="_blank" rel="noopener noreferrer"
+                  <a href={basescan(chainId, 'address', contractAddr!)} target="_blank" rel="noopener noreferrer"
                     className="font-mono text-blue-400 hover:underline text-sm">{contractAddr}</a>
                 </div>
                 <div className="text-right">
@@ -190,12 +196,12 @@ export default function RunPage() {
                 <div className="mt-4 grid sm:grid-cols-2 gap-3 text-xs font-mono">
                   <div className="bg-gray-900 rounded-lg p-3">
                     <div className="text-gray-500 mb-1">Asset token (SRA, decimals=12)</div>
-                    <a href={`https://sepolia.basescan.org/address/${progress.assetToken}`} target="_blank" rel="noopener noreferrer"
+                    <a href={basescan(chainId, 'address', progress.assetToken!)} target="_blank" rel="noopener noreferrer"
                       className="text-violet-400 hover:underline break-all">{progress.assetToken ?? '–'}</a>
                   </div>
                   <div className="bg-gray-900 rounded-lg p-3">
                     <div className="text-gray-500 mb-1">Stablecoin token (SRS, USD)</div>
-                    <a href={`https://sepolia.basescan.org/address/${progress.stablecoinToken}`} target="_blank" rel="noopener noreferrer"
+                    <a href={basescan(chainId, 'address', progress.stablecoinToken!)} target="_blank" rel="noopener noreferrer"
                       className="text-cyan-400 hover:underline break-all">{progress.stablecoinToken ?? '–'}</a>
                   </div>
                 </div>
@@ -248,7 +254,7 @@ export default function RunPage() {
 
                   {initTxHash && (
                     <p className="text-xs text-gray-500 mt-2 font-mono">
-                      tx: <a href={`https://sepolia.basescan.org/tx/${initTxHash}`} target="_blank" rel="noopener noreferrer"
+                      tx: <a href={basescan(chainId, 'tx', initTxHash!)} target="_blank" rel="noopener noreferrer"
                         className="text-blue-400 hover:underline">{initTxHash}</a>
                     </p>
                   )}
