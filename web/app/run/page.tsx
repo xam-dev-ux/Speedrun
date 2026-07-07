@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from 'react';
 import { useAccount, useWriteContract, useWaitForTransactionReceipt, useDeployContract, useChainId } from 'wagmi';
-import { useQueryClient } from '@tanstack/react-query';
 import { ConnectButton } from '@rainbow-me/rainbowkit';
 import { ActivationBanner } from '@/components/ActivationBanner';
 import { LevelGrid } from '@/components/LevelGrid';
@@ -40,13 +39,13 @@ export default function RunPage() {
   const [initError, setInitError] = useState<string | undefined>();
   const { isSuccess: initConfirmed } = useWaitForTransactionReceipt({ hash: initTxHash });
 
-  // Force-refetch all contract reads every 1.5 s while waiting for initialized to flip
-  const queryClient = useQueryClient();
+  // Force-refetch speedrun reads every 1.5 s while waiting for initialized to flip
   useEffect(() => {
     if (!initConfirmed || progress.initialized) return;
-    const id = setInterval(() => { queryClient.invalidateQueries(); }, 1_500);
+    const id = setInterval(() => { progress.refetch(); }, 1_500);
     return () => clearInterval(id);
-  }, [initConfirmed, progress.initialized, queryClient]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [initConfirmed, progress.initialized]);
 
   // Speedrun shared state (used across steps via context)
   const [blocklistPolicyId, setBlocklistPolicyId] = useState<bigint>(0n);

@@ -94,21 +94,21 @@ export function useSpeedrunProgress(contractAddress: `0x${string}` | undefined) 
     query: { enabled: !!contractAddress, refetchInterval: 5_000 },
   });
 
-  const { data: initialized } = useReadContract({
+  const { data: initialized, refetch: refetchInitialized } = useReadContract({
     address: contractAddress,
     abi: SPEEDRUN_ABI,
     functionName: 'initialized',
     query: { enabled: !!contractAddress, refetchInterval: 3_000, refetchIntervalInBackground: true },
   });
 
-  const { data: assetToken } = useReadContract({
+  const { data: assetToken, refetch: refetchAsset } = useReadContract({
     address: contractAddress,
     abi: SPEEDRUN_ABI,
     functionName: 'assetToken',
     query: { enabled: !!contractAddress, refetchInterval: 3_000, refetchIntervalInBackground: true },
   });
 
-  const { data: stablecoinToken } = useReadContract({
+  const { data: stablecoinToken, refetch: refetchStable } = useReadContract({
     address: contractAddress,
     abi: SPEEDRUN_ABI,
     functionName: 'stablecoinToken',
@@ -131,6 +131,8 @@ export function useSpeedrunProgress(contractAddress: `0x${string}` | undefined) 
 
   const progressBigInt = progress ?? 0n;
 
+  const refetch = () => Promise.all([refetchInitialized(), refetchAsset(), refetchStable()]);
+
   return {
     progress: progressBigInt,
     initialized: initialized ?? false,
@@ -140,6 +142,7 @@ export function useSpeedrunProgress(contractAddress: `0x${string}` | undefined) 
     startedAt: startedAt ?? 0n,
     isStepDone: (id: number) => Boolean((progressBigInt >> BigInt(id)) & 1n),
     stepsCompleted: popcount(progressBigInt),
+    refetch,
   };
 }
 
