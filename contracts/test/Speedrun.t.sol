@@ -4,36 +4,10 @@ pragma solidity ^0.8.25;
 import {Test, console} from "forge-std/Test.sol";
 import {Speedrun} from "../src/Speedrun.sol";
 
-/// @dev Minimal B20Factory mock deployed at the canonical precompile address via vm.etch.
-///      Returns deterministic addresses matching the real precompile's formula.
-contract MockB20Factory {
-    function createB20(
-        uint8 variant,
-        bytes32 salt,
-        bytes calldata, /*params*/
-        bytes[] calldata /*initCalls*/
-    ) external payable returns (address token) {
-        token = address(uint160(uint256(keccak256(abi.encode(variant, msg.sender, salt)))));
-    }
-
-    function getB20Address(uint8 variant, address creator, bytes32 salt)
-        external
-        pure
-        returns (address)
-    {
-        return address(uint160(uint256(keccak256(abi.encode(variant, creator, salt)))));
-    }
-
-    function isB20(address) external pure returns (bool) { return true; }
-    function isB20Initialized(address) external pure returns (bool) { return true; }
-}
-
 contract SpeedrunTest is Test {
     Speedrun internal speedrun;
     address internal runner;
     address internal alice;
-
-    address internal constant FACTORY = 0xB20f000000000000000000000000000000000000;
 
     bytes32 internal constant SALT_A = bytes32("salt_asset");
     bytes32 internal constant SALT_S = bytes32("salt_stable");
@@ -43,9 +17,7 @@ contract SpeedrunTest is Test {
         runner = makeAddr("runner");
         alice  = makeAddr("alice");
 
-        // Etch the mock at the canonical B20Factory precompile address
-        MockB20Factory mock = new MockB20Factory();
-        vm.etch(FACTORY, address(mock).code);
+        vm.deal(runner, 1 ether);
 
         vm.prank(runner);
         speedrun = new Speedrun();
@@ -74,9 +46,11 @@ contract SpeedrunTest is Test {
     }
 
     function test_initTokens_emitsEvent() public {
+        address expectedAsset  = speedrun.predictedAssetToken(SALT_A);
+        address expectedStable = speedrun.predictedStablecoinToken(SALT_S);
         vm.prank(runner);
-        vm.expectEmit(true, false, true, false);
-        emit Speedrun.Initialized(address(0), address(0), runner); // addresses checked separately
+        vm.expectEmit(true, true, true, true);
+        emit Speedrun.Initialized(expectedAsset, expectedStable, runner);
         speedrun.initTokens(SALT_A, SALT_S, "USD");
     }
 

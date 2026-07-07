@@ -98,7 +98,7 @@ export function useSpeedrunProgress(contractAddress: `0x${string}` | undefined) 
     address: contractAddress,
     abi: SPEEDRUN_ABI,
     functionName: 'initialized',
-    query: { enabled: !!contractAddress },
+    query: { enabled: !!contractAddress, refetchInterval: 3_000 },
   });
 
   const { data: assetToken } = useReadContract({

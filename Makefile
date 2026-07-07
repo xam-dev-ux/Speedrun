@@ -2,7 +2,9 @@
 
 BASE_SEPOLIA_RPC_URL ?= https://sepolia.base.org
 BASE_MAINNET_RPC_URL ?= https://mainnet.base.org
+BASE_LOCAL_RPC_URL   ?= http://127.0.0.1:8545
 BASESCAN_API_KEY     ?= $(shell grep -E '^BASESCAN_API_KEY=' .env 2>/dev/null | cut -d= -f2-)
+KEYSTORE_WALLET      ?= 0x8F058fE6b568D97f85d517Ac441b52B95722fDDe
 export BASESCAN_API_KEY
 
 # ── Setup ──────────────────────────────────────────────────────────────────
@@ -50,6 +52,30 @@ deploy-mainnet:
 		--broadcast \
 		--verify \
 		-vv; true
+
+# ── Local (base-anvil) ─────────────────────────────────────────────────────
+# Starts base-anvil, funds the keystore wallet, and deploys Speedrun.sol.
+# Use: make anvil-start (in one terminal), then make deploy-local / test-local.
+anvil-start:
+	base-anvil --chain-id 8453
+
+anvil-fund:
+	@# Fund keystore wallet from anvil dev account 0
+	base-cast send $(KEYSTORE_WALLET) \
+		--value 10ether \
+		--rpc-url $(BASE_LOCAL_RPC_URL) \
+		--private-key 0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80
+
+deploy-local: anvil-fund
+	@echo "Deploying to local base-anvil (chain 8453)..."
+	cd contracts && forge script script/Deploy.s.sol \
+		--rpc-url $(BASE_LOCAL_RPC_URL) \
+		--account speedrun \
+		--broadcast \
+		-vv
+
+test-local:
+	cd contracts && FOUNDRY_PROFILE=local base-forge test -vv
 
 # ── Frontend ───────────────────────────────────────────────────────────────
 web-dev:

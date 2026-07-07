@@ -30,6 +30,7 @@ export default function RunPage() {
   const [initCurrency, setInitCurrency] = useState('USD');
   const [isInitializing, setIsInitializing] = useState(false);
   const [initTxHash, setInitTxHash] = useState<`0x${string}` | undefined>();
+  const [initError, setInitError] = useState<string | undefined>();
   const { isSuccess: initConfirmed } = useWaitForTransactionReceipt({ hash: initTxHash });
 
   // Speedrun shared state (used across steps via context)
@@ -57,12 +58,18 @@ export default function RunPage() {
     const saltAsset  = `0x${'6173736574'.padEnd(64, '0')}` as `0x${string}`;
     const saltStable = `0x${'737461626c65'.padEnd(64, '0')}` as `0x${string}`;
     setIsInitializing(true);
+    setInitError(undefined);
     try {
       const hash = await writeContractAsync({
         address: contractAddr, abi: SPEEDRUN_ABI,
         functionName: 'initTokens', args: [saltAsset, saltStable, code],
       });
       setInitTxHash(hash);
+    } catch (e: unknown) {
+      const msg = e instanceof Error ? e.message : String(e);
+      setInitError(msg.includes('FeatureNotActivated')
+        ? 'B20 tokens are not yet enabled on mainnet. Check https://status.base.org for updates.'
+        : msg.slice(0, 120));
     } finally {
       setIsInitializing(false);
     }
@@ -204,26 +211,40 @@ export default function RunPage() {
               )}
 
               {/* initTokens */}
-              {!progress.initialized && activation === 'active' && !initConfirmed && (
+              {!progress.initialized && activation === 'active' && (
                 <div className="mt-6 border border-yellow-500/30 bg-yellow-900/10 rounded-xl p-5">
                   <h3 className="font-bold text-yellow-400 mb-1">Step 0 — Deploy B20 tokens</h3>
-                  <p className="text-gray-400 text-sm mb-4">
-                    Call <span className="font-mono text-yellow-300">initTokens()</span> to deploy your Asset and Stablecoin.
-                  </p>
-                  <div className="flex gap-3 items-center">
-                    <input type="text" maxLength={5} placeholder="USD" value={initCurrency}
-                      onChange={(e) => setInitCurrency(e.target.value.toUpperCase().replace(/[^A-Z]/g, ''))}
-                      className="w-24 bg-gray-900 border border-gray-700 rounded-lg px-3 py-2 font-mono text-sm text-white placeholder-gray-600 focus:outline-none focus:border-yellow-500 uppercase" />
-                    <button onClick={handleInitTokens} disabled={isInitializing || isTxPending}
-                      className="bg-yellow-500 hover:bg-yellow-400 disabled:opacity-40 disabled:cursor-not-allowed text-black font-bold py-2 px-6 rounded-lg transition-colors">
-                      {isInitializing || isTxPending ? 'Sending…' : 'Deploy tokens →'}
-                    </button>
-                  </div>
+
+                  {initConfirmed ? (
+                    <p className="text-gray-400 text-sm">
+                      Tokens deployed — waiting for chain data…
+                      <span className="ml-2 animate-pulse">⏳</span>
+                    </p>
+                  ) : (
+                    <>
+                      <p className="text-gray-400 text-sm mb-4">
+                        Call <span className="font-mono text-yellow-300">initTokens()</span> to deploy your Asset and Stablecoin.
+                      </p>
+                      <div className="flex gap-3 items-center">
+                        <input type="text" maxLength={5} placeholder="USD" value={initCurrency}
+                          onChange={(e) => setInitCurrency(e.target.value.toUpperCase().replace(/[^A-Z]/g, ''))}
+                          className="w-24 bg-gray-900 border border-gray-700 rounded-lg px-3 py-2 font-mono text-sm text-white placeholder-gray-600 focus:outline-none focus:border-yellow-500 uppercase" />
+                        <button onClick={handleInitTokens} disabled={isInitializing || isTxPending}
+                          className="bg-yellow-500 hover:bg-yellow-400 disabled:opacity-40 disabled:cursor-not-allowed text-black font-bold py-2 px-6 rounded-lg transition-colors">
+                          {isInitializing || isTxPending ? 'Sending…' : 'Deploy tokens →'}
+                        </button>
+                      </div>
+                    </>
+                  )}
+
                   {initTxHash && (
                     <p className="text-xs text-gray-500 mt-2 font-mono">
                       tx: <a href={`https://sepolia.basescan.org/tx/${initTxHash}`} target="_blank" rel="noopener noreferrer"
                         className="text-blue-400 hover:underline">{initTxHash}</a>
                     </p>
+                  )}
+                  {initError && (
+                    <p className="text-xs text-red-400 mt-2">{initError}</p>
                   )}
                 </div>
               )}
