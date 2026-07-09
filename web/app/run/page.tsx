@@ -73,9 +73,14 @@ export default function RunPage() {
       setDeployHash(hash);
     } catch (e: unknown) {
       const msg = e instanceof Error ? e.message : String(e);
-      if (!msg.toLowerCase().includes('user rejected')) {
-        setDeployError(msg.slice(0, 140));
-      }
+      console.error('[deploy]', e);
+      if (msg.toLowerCase().includes('user rejected') || msg.toLowerCase().includes('user denied')) return;
+      const isSmartWallet = msg.toLowerCase().includes('useroperation') || msg.toLowerCase().includes('does not support') || msg.toLowerCase().includes('unsupported');
+      setDeployError(
+        isSmartWallet
+          ? 'Smart Wallet (Base App) cannot deploy contracts directly. Deploy from a regular wallet (e.g. Chrome + MetaMask/Rabby), then paste the address in the import field below.'
+          : msg.slice(0, 200)
+      );
     }
   }
 
@@ -175,7 +180,9 @@ export default function RunPage() {
               </p>
             )}
             {deployError && (
-              <p className="text-xs text-red-400 mt-3">{deployError}</p>
+              <div className="mt-4 p-3 bg-red-900/20 border border-red-500/30 rounded-lg">
+                <p className="text-xs text-red-400">{deployError}</p>
+              </div>
             )}
 
             <div className="mt-8 pt-6 border-t border-gray-800">
