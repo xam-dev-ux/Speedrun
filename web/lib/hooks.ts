@@ -155,24 +155,26 @@ function popcount(n: bigint): number {
   return count;
 }
 
-// ── Local storage: Speedrun contract address ───────────────────────────────
-const LS_KEY = 'b20speedrun:contract';
-
+// ── Local storage: Speedrun contract address (per-chain) ──────────────────
 export function useSpeedrunContractAddress() {
+  const chainId = useChainId();
+  const lsKey = `b20speedrun:contract:${chainId}`;
   const [address, setAddressState] = useState<`0x${string}` | null>(null);
 
   useEffect(() => {
-    const stored = localStorage.getItem(LS_KEY);
+    const stored = localStorage.getItem(lsKey);
     if (stored?.startsWith('0x')) {
       setAddressState(stored as `0x${string}`);
+    } else {
+      setAddressState(null);
     }
-  }, []);
+  }, [lsKey]);
 
   const setAddress = (addr: `0x${string}` | null) => {
     if (addr) {
-      localStorage.setItem(LS_KEY, addr);
+      localStorage.setItem(lsKey, addr);
     } else {
-      localStorage.removeItem(LS_KEY);
+      localStorage.removeItem(lsKey);
     }
     setAddressState(addr);
   };

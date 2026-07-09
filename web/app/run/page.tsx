@@ -48,6 +48,7 @@ export default function RunPage() {
   }, [initConfirmed, progress.initialized]);
 
   // Speedrun shared state (used across steps via context)
+  const [confirmClear, setConfirmClear] = useState(false);
   const [blocklistPolicyId, setBlocklistPolicyId] = useState<bigint>(0n);
   const [allowlistPolicyId, setAllowlistPolicyId] = useState<bigint>(0n);
   const [victimAddress, setVictimAddress] = useState<`0x${string}`>('0x000000000000000000000000000000000000dEaD');
@@ -275,10 +276,20 @@ export default function RunPage() {
                 </div>
               )}
 
-              <button onClick={() => { if (confirm('Clear the stored contract address?')) setContractAddr(null); }}
-                className="mt-4 text-gray-600 hover:text-red-400 text-xs transition-colors">
-                Change contract
-              </button>
+              {confirmClear ? (
+                <div className="mt-4 flex items-center gap-3">
+                  <span className="text-xs text-gray-400">Clear contract address?</span>
+                  <button onClick={() => { setContractAddr(null); setConfirmClear(false); }}
+                    className="text-xs text-red-400 hover:text-red-300 transition-colors">Yes, clear</button>
+                  <button onClick={() => setConfirmClear(false)}
+                    className="text-xs text-gray-600 hover:text-gray-400 transition-colors">Cancel</button>
+                </div>
+              ) : (
+                <button onClick={() => setConfirmClear(true)}
+                  className="mt-4 text-gray-600 hover:text-red-400 text-xs transition-colors">
+                  Change contract
+                </button>
+              )}
             </section>
 
             {/* Level grid */}
