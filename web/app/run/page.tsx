@@ -26,6 +26,7 @@ export default function RunPage() {
   // Deploy Speedrun contract from browser
   const { deployContractAsync, isPending: isDeploying } = useDeployContract();
   const [deployHash, setDeployHash] = useState<`0x${string}` | undefined>();
+  const [deployError, setDeployError] = useState<string | undefined>();
   const { isSuccess: deployConfirmed, data: deployReceipt } = useWaitForTransactionReceipt({ hash: deployHash });
 
   const progress = useSpeedrunProgress(contractAddr ?? undefined);
@@ -53,18 +54,29 @@ export default function RunPage() {
   const [allowlistPolicyId, setAllowlistPolicyId] = useState<bigint>(0n);
   const [victimAddress, setVictimAddress] = useState<`0x${string}`>('0x000000000000000000000000000000000000dEaD');
 
-  // Grab deployed address from receipt
-  if (deployConfirmed && deployReceipt?.contractAddress && !contractAddr) {
-    setContractAddr(deployReceipt.contractAddress);
-  }
+  // Grab deployed address from receipt (must be in useEffect — never call setState during render)
+  useEffect(() => {
+    if (deployConfirmed && deployReceipt?.contractAddress && !contractAddr) {
+      setContractAddr(deployReceipt.contractAddress);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [deployConfirmed, deployReceipt?.contractAddress]);
 
   async function handleDeploy() {
     if (!SPEEDRUN_BYTECODE || SPEEDRUN_BYTECODE === '0x') {
       alert('Run `make sync-abi` first to populate the Speedrun bytecode.');
       return;
     }
-    const hash = await deployContractAsync({ abi: SPEEDRUN_ABI, bytecode: SPEEDRUN_BYTECODE, args: [] });
-    setDeployHash(hash);
+    setDeployError(undefined);
+    try {
+      const hash = await deployContractAsync({ abi: SPEEDRUN_ABI, bytecode: SPEEDRUN_BYTECODE, args: [] });
+      setDeployHash(hash);
+    } catch (e: unknown) {
+      const msg = e instanceof Error ? e.message : String(e);
+      if (!msg.toLowerCase().includes('user rejected')) {
+        setDeployError(msg.slice(0, 140));
+      }
+    }
   }
 
   async function handleInitTokens() {
@@ -150,10 +162,21 @@ export default function RunPage() {
               <div className="flex-1 border-t border-gray-800" />
             </div>
 
-            <button onClick={handleDeploy} disabled={isDeploying}
+            <button onClick={handleDeploy} disabled={isDeploying || !!deployHash}
               className="bg-blue-600 hover:bg-blue-700 disabled:opacity-40 disabled:cursor-not-allowed text-white font-bold py-2 px-6 rounded-lg transition-colors">
-              {isDeploying ? 'Deploying…' : 'Deploy via Wallet'}
+              {isDeploying ? 'Confirm in wallet…' : deployHash ? 'Waiting for confirmation…' : 'Deploy via Wallet'}
             </button>
+
+            {deployHash && !deployConfirmed && (
+              <p className="text-xs text-gray-500 mt-3 font-mono">
+                tx: <a href={basescan(chainId, 'tx', deployHash)} target="_blank" rel="noopener noreferrer"
+                  className="text-blue-400 hover:underline">{deployHash}</a>
+                <span className="ml-2 animate-pulse">⏳</span>
+              </p>
+            )}
+            {deployError && (
+              <p className="text-xs text-red-400 mt-3">{deployError}</p>
+            )}
 
             <div className="mt-8 pt-6 border-t border-gray-800">
               <p className="text-gray-500 text-sm mb-3">Already deployed? Import your contract address:</p>
