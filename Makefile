@@ -43,6 +43,18 @@ level1-sepolia:
 		--account speedrun \
 		--broadcast -vv
 
+speedrun-mainnet:
+	@echo "⚠️  Executing ALL 40 speedrun steps on BASE MAINNET."
+	@echo "    Contract: $${SPEEDRUN_CONTRACT:-0x77132DB890Cd19BA41fb7E516AEd4812e84e8790 (default)}"
+	@echo "    Press Ctrl-C to cancel, Enter to continue."
+	@read _
+	cd contracts && base-forge script script/SpeedrunAll.s.sol \
+		--rpc-url $(BASE_MAINNET_RPC_URL) \
+		--account speedrun \
+		--broadcast \
+		--slow \
+		-vv; true
+
 deploy-mainnet:
 	@echo "⚠️  Deploying to BASE MAINNET. Press Ctrl-C to cancel, Enter to continue."
 	@read _
